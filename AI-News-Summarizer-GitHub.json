@@ -1,0 +1,168 @@
+{
+  "name": "AI News Summarizer",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "id": "aa2b19c6-fb77-488f-8149-50661b78c5e0",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -336,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://aibusiness.com/rss.xml",
+        "options": {}
+      },
+      "id": "2a55efe8-8d3e-497f-b369-55a6b83f1a57",
+      "name": "AI News Feed",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -112,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "8efc01b4-490b-4644-a097-85f0ebef4604",
+      "name": "Data Aggregator",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        112,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.data }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an AI news summarizer assistant. Analyze the news articles and create an email summary.\nFor each article:\nCreate a headline in ALL CAPS:\nWrite a 2-3 sentence summary\nInclude the article link\nFormat as: Subject: Today's AI News\nHi there,\nHere's your AI news summary:\nHEADLINE IN CAPS\nSummary of what happened and why it matters...\nRead more: [link]\nBest regards,\nAI News Bot"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "785ab251-05ac-4336-a9df-cc1969a1b0ef",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        336,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "4bf62e2b-3ba4-4d2f-9d79-29180d9e861d",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "your-email@example.com",
+        "subject": "Today's AI News",
+        "emailType": "text",
+        "message": "={{ $json.text }}",
+        "options": {}
+      },
+      "id": "f0bfec02-7297-4adc-be31-54e0ae0a1112",
+      "name": "Send a message",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        -64
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI News Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI News Feed": {
+      "main": [
+        [
+          {
+            "node": "Data Aggregator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Aggregator": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}
